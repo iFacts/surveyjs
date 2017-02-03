@@ -46,3 +46,4 @@ export {SurveyTemplateText} from "../knockout/templateText";
 
 //Uncomment to include the "date" question type.
 //export {QuestionDate} from "../plugins/knockout/koquestion_date";
+export {QuestionIfactsRadiogroup} from "../knockout/koquestion_ifactsradiogroup";
