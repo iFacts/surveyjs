@@ -6,10 +6,17 @@
 ##Getting started
 [![Join the chat at https://gitter.im/surveyjs/surveyjs](https://badges.gitter.im/surveyjs/surveyjs.svg)](https://gitter.im/surveyjs/surveyjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
-To find our more about the library go
+To find out more about the library go
 * to the [surveyjs.org site](http://surveyjs.org) 
 * explore the live [Examples](http://surveyjs.org/examples/) 
 * and build a survey JSON using [Visual Editor](http://surveyjs.org/builder/)
+
+You can try plnkr examples at:
+* Angular2 http://plnkr.co/edit/OJkKlUn1oxzWYtnruXir?p=preview
+* jQuery http://plnkr.co/edit/DH4vJWSBtza7bSCDm2r9?p=preview
+* Knockout http://plnkr.co/edit/JKy5wwiAhaBTMze3fOO0?p=preview
+* React http://plnkr.co/edit/qXdeQa6x2FHRg0YrOlPL?p=preview
+* Vue http://plnkr.co/edit/aTYVAiDvMWOf3zDReayE?p=preview
 
 Install the library using npm.
 
@@ -29,8 +36,15 @@ React version:
 ```
 npm install survey-react
 ```
+Vue version:
+```
+npm install survey-vue
+```
 
-Or dowload the latest version as zip file [Download](http://surveyjs.org/downloads/surveyjs.zip)
+Or use Azure CDN: https://surveyjs.azureedge.net/{version name}/{filename}. You find all versions/builds in the [surveyjs/build repo](https://github.com/surveyjs/builds).
+
+Or dowload a version as zip file from [Releases](https://github.com/surveyjs/surveyjs/releases)
+
 
 ##Building survey.js from sources
 
@@ -62,6 +76,9 @@ To build library yourself:
 
 ##Create your own question type.
 Explore the [example](https://github.com/surveyjs/surveyjs/tree/master/src/plugins) of adding a new question type into your survey library.
+
+##Use 3rd party controls as question widgets.
+Explore the [example](http://surveyjs.org/examples/react/custom-widget-datepicker.html) based on jquery datepicker
 
 ##License
 

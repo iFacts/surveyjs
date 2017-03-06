@@ -3,6 +3,7 @@ import {SurveyQuestionElementBase} from "./reactquestionelement";
 import {QuestionDropdownModel} from "../question_dropdown";
 import {SurveyQuestionCommentItem} from "./reactquestioncomment";
 import {ReactQuestionFactory} from "./reactquestionfactory";
+import {browser} from "../utils";
 
 export class SurveyQuestionDropdown extends SurveyQuestionElementBase {
     constructor(props: any) {
@@ -16,6 +17,10 @@ export class SurveyQuestionDropdown extends SurveyQuestionElementBase {
         this.handleOnChange = this.handleOnChange.bind(this);
     }
     protected get question(): QuestionDropdownModel { return this.questionBase as QuestionDropdownModel; }
+    componentWillReceiveProps(nextProps: any) {
+        super.componentWillReceiveProps(nextProps);
+        this.state.value = this.question.value;
+    }
     handleOnChange(event) {
         this.question.value = event.target.value;
         this.setState({ value: this.question.value });
@@ -25,14 +30,14 @@ export class SurveyQuestionDropdown extends SurveyQuestionElementBase {
         var comment = this.question.value === this.question.otherItem.value ? this.renderOther() : null;
         var select = this.renderSelect();
         return (
-            <div>
+            <div className={this.css.dropdown.root}>
             {select}
             {comment}
             </div>
         );
     }
     protected renderSelect(): JSX.Element {
-        if (this.isDisplayMode)  return (<div id={this.question.inputId} className={this.css}>{this.question.value}</div>);
+        if (this.isDisplayMode)  return (<div id={this.question.inputId} className={this.css.dropdown.control}>{this.question.value}</div>);
         var options = [];
         for (var i = 0; i < this.question.visibleChoices.length; i++) {
             var item = this.question.visibleChoices[i];
@@ -40,8 +45,13 @@ export class SurveyQuestionDropdown extends SurveyQuestionElementBase {
             var option = <option key={key} value={item.value}>{item.text}</option>;
             options.push(option);
         }
+
+        let onChange = null;
+        if (browser.msie) {
+            onChange = this.handleOnChange;
+        }
         return (
-            <select id={this.question.inputId} className={this.css} value={this.state.value} onChange={this.handleOnChange}>
+            <select id={this.question.inputId} className={this.css.dropdown.control} value={this.state.value} onChange={onChange} onInput={this.handleOnChange}>
             <option value="">{this.question.optionsCaption}</option>
             {options}
             </select>

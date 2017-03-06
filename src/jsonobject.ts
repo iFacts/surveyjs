@@ -5,11 +5,13 @@ export class JsonObjectProperty {
     private choicesValue: Array<any> = null;
     private choicesfunc: () => Array<any> = null;
     public className: string = null;
+    public alternativeName: string = null;
     public classNamePart: string = null;
     public baseClassName: string = null;
     public defaultValue: any = null;
+    public readOnly: boolean = false;
     public onGetValue: (obj: any) => any = null;
-    public onSetValue: (obj: any, value: any, jsonConv: JsonObject) => any
+    public onSetValue: (obj: any, value: any, jsonConv: JsonObject) => any;
 
     constructor(public name: string) {
     }
@@ -21,12 +23,14 @@ export class JsonObjectProperty {
     }
     public getValue(obj: any): any {
         if (this.onGetValue) return this.onGetValue(obj);
-        return null;
+        return obj[this.name];
     }
     public get hasToUseSetValue() { return this.onSetValue; }
     public setValue(obj: any, value: any, jsonConv: JsonObject) {
         if (this.onSetValue) {
             this.onSetValue(obj, value, jsonConv);
+        } else {
+            obj[this.name] = value;
         }
     }
     public getObjType(objType: string) {
@@ -110,6 +114,9 @@ export class JsonMetadataClass {
             if (propInfo.classNamePart) {
                 prop.classNamePart = propInfo.classNamePart;
             }
+            if(propInfo.alternativeName) {
+                prop.alternativeName = propInfo.alternativeName;
+            }
         }
         return prop;
     }
@@ -149,14 +156,21 @@ export class JsonMetadata {
             metaDataClass.creator = creator;
         }
     }
-    public getProperties(name: string): Array<JsonObjectProperty> {
-        var properties = this.classProperties[name];
+    public getProperties(className: string): Array<JsonObjectProperty> {
+        var properties = this.classProperties[className];
         if (!properties) {
             properties = new Array<JsonObjectProperty>();
-            this.fillProperties(name, properties);
-            this.classProperties[name] = properties;
+            this.fillProperties(className, properties);
+            this.classProperties[className] = properties;
         }
         return properties;
+    }
+    public findProperty(className: string, propertyName: string) : JsonObjectProperty {
+        var properties = this.getProperties(className);
+        for(var i = 0; i < properties.length; i ++) {
+            if(properties[i].name == propertyName) return properties[i];
+        }
+        return null;
     }
     public createClass(name: string): any {
         var metaDataClass = this.findClass(name);
@@ -359,12 +373,7 @@ export class JsonObject {
         return result;
     }
     protected valueToJson(obj: any, result: any, property: JsonObjectProperty) {
-        var value = null;
-        if (property.hasToUseGetValue) {
-            value = property.getValue(obj);
-        } else {
-            value = obj[property.name];
-        }
+        var value = property.getValue(obj);
         if (value === undefined || value === null) return;
         if (property.isDefaultValue(value)) return;
         if (this.isValueArray(value)) {
@@ -396,7 +405,7 @@ export class JsonObject {
             value = newObj.newObj;
         }
         if (!newObj.error) {
-            obj[key] = value;
+            obj[property.name] = value;
         }
     }
     private isValueArray(value: any): boolean { return value && value.constructor.toString().indexOf("Array") > -1; }
@@ -462,7 +471,8 @@ export class JsonObject {
     private findProperty(properties: Array<JsonObjectProperty>, key: any): JsonObjectProperty {
         if (!properties) return null;
         for (var i = 0; i < properties.length; i++) {
-            if (properties[i].name == key) return properties[i];
+            var prop = properties[i];
+            if (prop.name == key || prop.alternativeName == key) return prop;
         }
         return null;
     }
