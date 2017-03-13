@@ -2,10 +2,10 @@
 <!-- /ko -->
 <script type="text/html" id="survey-content">
     <div data-bind="css: css.root, afterRender: koEventAfterRender">
-        <div data-bind="visible: (title.length > 0) && showTitle && koState() != 'completed', css: css.header">
+        <div data-bind="visible: (title.length > 0) && showTitle && (koState() != 'completed' || keepSurveyVisibleAfterCompletion), css: css.header">
             <h3 data-bind="text:processedTitle"></h3>
         </div>
-        <!-- ko if: koState() == "running" -->
+        <!-- ko if: koState() == "running" || keepSurveyVisibleAfterCompletion-->
         <div data-bind="css: css.body">
             <div data-bind="visible: showProgressBar =='top', template: 'survey-progress'"></div>
             <div id="sq_page" data-bind="template: { name: 'survey-page', data: koCurrentPage, afterRender: koAfterRenderPage }"></div>

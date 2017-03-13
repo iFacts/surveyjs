@@ -25,6 +25,7 @@ export class SurveyModel extends Base implements ISurvey, ISurveyTriggerOwner {
     public showTitle: boolean = true;
     public showPageTitles: boolean = true;
     public showCompletedPage: boolean = true;
+    public keepSurveyVisibleAfterCompletion: boolean = true;
     public completedHtml: string = "";
     public requiredText: string = "*";
     public questionStartIndex: string = "";
@@ -821,7 +822,7 @@ JsonObject.metaData.addClass("survey", [{ name: "locale", choices: () => { retur
     { name: "triggers:triggers", baseClassName: "surveytrigger", classNamePart: "trigger" },
     "surveyId", "surveyPostId", "cookieName", "sendResultOnPageNext:boolean",
     { name: "showNavigationButtons:boolean", default: true }, { name: "showTitle:boolean", default: true }, 
-    { name: "showPageTitles:boolean", default: true }, { name: "showCompletedPage:boolean", default: true },
+    { name: "showPageTitles:boolean", default: true }, { name: "showCompletedPage:boolean", default: true },{ name: "keepSurveyVisibleAfterCompletion:boolean", default: true }, 
     "showPageNumbers:boolean", { name: "showQuestionNumbers", default: "on", choices: ["on", "onPage", "off"] },
     { name: "questionTitleLocation", default: "top", choices: ["top", "bottom"] },
     { name: "showProgressBar", default: "off", choices: ["off", "top", "bottom"] },

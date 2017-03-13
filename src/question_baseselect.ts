@@ -183,7 +183,7 @@ export class QuestionCheckboxBase extends QuestionSelectBase {
     }
     public get colCount(): number { return this.colCountValue; }
     public set colCount(value: number) {
-        if (value < 0 || value > 4) return;
+        if (value < 0) return;
         this.colCountValue = value;
         this.fireCallback(this.colCountChangedCallback);
     }

@@ -133,7 +133,7 @@ export class Survey extends SurveyModel {
 ko.components.register('survey', {
     viewModel: {
         createViewModel: function(params, componentInfo) {
-            var survey: Survey = ko.unwrap(params.survey);
+            var survey: Survey = params.survey;
             survey.render();
             return params.survey;
         }
