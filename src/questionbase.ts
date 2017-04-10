@@ -2,8 +2,9 @@
 import {QuestionCustomWidget} from './questionCustomWidgets';
 import {JsonObject} from './jsonobject';
 import {ConditionRunner} from './conditions';
+import {ILocalizableOwner} from "./localizablestring";
 
-export class QuestionBase extends Base implements IQuestion, IConditionRunner {
+export class QuestionBase extends Base implements IQuestion, IConditionRunner, ILocalizableOwner {
     private static questionCounter = 100;
     private static getQuestionId(): string {
         return "sq_" + QuestionBase.questionCounter++;
@@ -15,7 +16,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
     public visibleIf: string = "";
     private idValue: string;
     private visibleValue: boolean = true;
-    public startWithNewLine: boolean = true;
+    private startWithNewLineValue: boolean = true;
     private visibleIndexValue: number = -1;
     public width: string = "";
     private renderWidthValue: string = "";
@@ -24,6 +25,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
     focusCallback: () => void;
     renderWidthChangedCallback: () => void;
     rowVisibilityChangedCallback: () => void;
+    startWithNewLineChangedCallback: () => void;
     visibilityChangedCallback: () => void;
     visibleIndexChangedCallback: () => void;
 
@@ -32,6 +34,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
         this.idValue = QuestionBase.getQuestionId();
         this.onCreating();
     }
+    public get isPanel(): boolean { return false; }
     public get visible(): boolean { return this.visibleValue; }
     public set visible(val: boolean) {
         if (val == this.visible) return;
@@ -42,6 +45,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
             this.survey.questionVisibilityChanged(<IQuestion>this, this.visible);
         }
     }
+    public get isVisible(): boolean { return this.visible || (this.survey && this.survey.isDesignMode); }
     public get visibleIndex(): number { return this.visibleIndexValue; }
     public hasErrors(fireCallback: boolean = true): boolean { return false; }
     public get currentErrorCount(): number { return 0; }
@@ -49,6 +53,12 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
     public get hasInput(): boolean { return false; }
     public get hasComment(): boolean { return false; }
     public get id(): string { return this.idValue; }
+    public get startWithNewLine(): boolean { return this.startWithNewLineValue; }
+    public set startWithNewLine(value: boolean) { 
+        if(this.startWithNewLine == value) return;
+        this.startWithNewLineValue = value;
+        if(this.startWithNewLineChangedCallback) this.startWithNewLineChangedCallback();
+    }
     public get renderWidth(): string { return this.renderWidthValue; }
     public set renderWidth(val: string) {
         if (val == this.renderWidth) return;
@@ -82,16 +92,22 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner {
         this.visible = this.conditionRunner.run(values);
     }
     //IQuestion
-    onSurveyValueChanged(newValue: any) {
+    public onSurveyValueChanged(newValue: any) {
     }
-    onSurveyLoad() {
+    public onSurveyLoad() {
     }
-    setVisibleIndex(value: number) {
+    public setVisibleIndex(value: number) {
         if (this.visibleIndexValue == value) return;
         this.visibleIndexValue = value;
         this.fireCallback(this.visibleIndexChangedCallback);
     }
-    supportGoNextPageAutomatic() { return false; }
+    public supportGoNextPageAutomatic() { return false; }
+    public clearUnusedValues() {}
+    public onLocaleChanged() {}
+    //ILocalizableOwner
+    public getLocale(): string {
+        return this.data ? (<ILocalizableOwner><any>this.data).getLocale() : ""; 
+    }
 }
 JsonObject.metaData.addClass("questionbase", ["!name", { name: "visible:boolean", default: true }, "visibleIf:expression",
     { name: "width" }, { name: "startWithNewLine:boolean", default: true}, {name: "indent:number", default: 0, choices: [0, 1, 2, 3]}]);

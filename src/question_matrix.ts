@@ -1,4 +1,5 @@
-﻿import {Base, ItemValue} from "./base";
+﻿import {Base} from "./base";
+import {ItemValue} from "./itemvalue";
 import {Question} from "./question";
 import {JsonObject} from "./jsonobject";
 import {SurveyError} from "./base";
@@ -28,13 +29,15 @@ export class MatrixRowModel extends Base {
     }
 }
 export class QuestionMatrixModel extends Question implements IMatrixData {
-    private columnsValue: ItemValue[] = [];
-    private rowsValue: ItemValue[] = [];
+    private columnsValue: Array<ItemValue>;
+    private rowsValue: Array<ItemValue>;
     private isRowChanging = false;
     private generatedVisibleRows: Array<MatrixRowModel>;
     public isAllRowRequired: boolean = false;
     constructor(public name: string) {
         super(name);
+        this.columnsValue = ItemValue.createArray(this);
+        this.rowsValue = ItemValue.createArray(this);
     }
     public getType(): string {
         return "matrix";
@@ -126,4 +129,4 @@ JsonObject.metaData.addClass("matrix", [{ name: "columns:itemvalues", onGetValue
     { name: "rows:itemvalues", onGetValue: function (obj: any) { return ItemValue.getData(obj.rows); }, onSetValue: function (obj: any, value: any) { obj.rows = value; } },
     "isAllRowRequired:boolean"],  function () { return new QuestionMatrixModel(""); }, "question");
 
-QuestionFactory.Instance.registerQuestion("matrix", (name) => { var q = new QuestionMatrixModel(name); q.rows = ["Row 1", "Row 2"]; q.columns = ["Column 1", "Column 2", "Column 3"]; return q; });
+QuestionFactory.Instance.registerQuestion("matrix", (name) => { var q = new QuestionMatrixModel(name); q.rows = QuestionFactory.DefaultRows; q.columns = QuestionFactory.DefaultColums; return q; });

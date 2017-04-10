@@ -3,8 +3,9 @@
     IMatrixDropdownData
 } from "./question_matrixdropdownbase";
 import {JsonObject} from "./jsonobject";
-import {ItemValue} from "./base";
+import {ItemValue} from "./itemvalue";
 import {QuestionFactory} from "./questionfactory";
+import {surveyLocalization} from "./surveyStrings";
 
 export class MatrixDropdownRowModel extends MatrixDropdownRowModelBase {
     constructor(public name: any, public text: string, data: IMatrixDropdownData, value: any) {
@@ -13,10 +14,11 @@ export class MatrixDropdownRowModel extends MatrixDropdownRowModelBase {
     public get rowName() { return this.name; }
 }
 export class QuestionMatrixDropdownModel extends QuestionMatrixDropdownModelBase implements IMatrixDropdownData {
-    private rowsValue: ItemValue[] = [];
+    private rowsValue: Array<ItemValue>;
 
     constructor(public name: string) {
         super(name);
+        this.rowsValue = ItemValue.createArray(this);
     }
     public getType(): string {
         return "matrixdropdown";
@@ -44,4 +46,4 @@ export class QuestionMatrixDropdownModel extends QuestionMatrixDropdownModelBase
 JsonObject.metaData.addClass("matrixdropdown", [{ name: "rows:itemvalues", onGetValue: function (obj: any) { return ItemValue.getData(obj.rows); }, onSetValue: function (obj: any, value: any) { obj.rows = value; }}],
     function () { return new QuestionMatrixDropdownModel(""); }, "matrixdropdownbase");
 
-QuestionFactory.Instance.registerQuestion("matrixdropdown", (name) => { var q = new QuestionMatrixDropdownModel(name); q.choices = [1, 2, 3, 4, 5]; q.rows = ["Row 1", "Row 2"]; q.addColumn("Column 1"); q.addColumn("Column 2"); q.addColumn("Column 3"); return q; });
+QuestionFactory.Instance.registerQuestion("matrixdropdown", (name) => { var q = new QuestionMatrixDropdownModel(name); q.choices = [1, 2, 3, 4, 5]; q.rows = QuestionFactory.DefaultColums; QuestionMatrixDropdownModelBase.addDefaultColumns(q); return q; });

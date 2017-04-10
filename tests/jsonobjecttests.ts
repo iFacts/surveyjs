@@ -1,5 +1,5 @@
 ﻿import {JsonObject, JsonUnknownPropertyError} from "../src/jsonobject";
-import {ItemValue} from "../src/base";
+import {ItemValue} from "../src/itemvalue";
 
 class Car {
     public name: string;
@@ -71,8 +71,8 @@ class CreatingObjectContainer {
 }
 
 JsonObject.metaData.addClass("dealer", ["name", "dummyname", "car", "cars", "stringArray", { name: "defaultValue", default: "default" },
-    { name: "cars", baseClassName: "car" },
-    { name: "truck", className: "truck" }, { name: "trucks", className: "truck" },
+    { name: "cars", baseClassName: "car", visible: false },
+    { name: "truck", className: "truck" }, { name: "trucks", className: "truck", visible: false },
     { name: "changeNameOnSet", onSetValue: function (obj: any, value: any, jsonConv: JsonObject) { obj.name = value; } }]);
 
 JsonObject.metaData.addClass("fast", [], function () { return new FastCar(); }, "car");
@@ -92,6 +92,25 @@ JsonObject.metaData.addClass("LongNamesOwner", [{ name: "items", baseClassName: 
 JsonObject.metaData.addClass("shouldnotcreate", ["A"], function () { return new NonCreatingObject(); });
 JsonObject.metaData.addClass("container", [{ name: "obj", className: "shouldnotcreate" }, { name: "items", className: "shouldnotcreate"}]);
 JsonObject.metaData.overrideClassCreatore("shouldnotcreate", function () { return new CreatingObject(); });
+
+class CheckGetPropertyValue {
+    public directProp: string;
+    public getValueProp: string;
+    public getValuePropGetter: string;
+    public serProperty: string;
+    public getSerProperty: CheckGetPropertyValueGetter = new CheckGetPropertyValueGetter();
+    public locProperty: string;
+    public locPropertyGetter: CheckGetPropertyValueGetter = new CheckGetPropertyValueGetter();
+    public getType(): string { return "getpropertyvalue"; }
+}
+
+class CheckGetPropertyValueGetter {
+    public text: string;
+    public getJson(): any { return {"text": this.text }; }
+}
+
+JsonObject.metaData.addClass("getpropertyvalue", ["directProp", {name: "getValueProp", onGetValue: function (obj: any) { return obj.getValuePropGetter; }},
+    {name: "serProperty", serializationProperty: "getSerProperty"}, {name: "locProperty", serializationProperty: "locPropertyGetter"}]);
 
 export default QUnit.module("JsonSerializationTests");
 
@@ -411,4 +430,33 @@ QUnit.test("Add alternative/misspelled property support, https://github.com/surv
     new JsonObject().toObject({ "cars": [{ "type": "sport", "maxSpeed": 320 }, { "type": "truck", "maxaWeight": 10000 }] }, dealer);
     var truck: any = dealer.cars[1];
     assert.equal(truck.maxWeight, 10000, "deserialize the second object");
+});
+
+
+QUnit.test("Check if visible is set", function (assert) {
+    assert.equal(JsonObject.metaData.findProperty("dealer", "name").visible, true, "By default the property is visible");
+    assert.equal(JsonObject.metaData.findProperty("dealer", "cars").visible, false, "Cars is invisible");
+});
+
+QUnit.test("Test getPropertyValue and isLocalizable", function (assert) {
+    var obj = new CheckGetPropertyValue();
+    obj.directProp = "dirValue";
+    obj.getValueProp = "getValue_no";
+    obj.getValuePropGetter = "getValue_yes";
+    obj.serProperty = "serProperty_no";
+    obj.getSerProperty.text = "serProperty_yes";
+    obj.locProperty = "loc_no";
+    obj.locPropertyGetter.text = "loc_yes";
+    
+    var property = JsonObject.metaData.findProperty(obj.getType(), "directProp");
+    assert.equal(property.getPropertyValue(obj), "dirValue", "dirProperty works correctly");
+    
+    property = JsonObject.metaData.findProperty(obj.getType(), "getValueProp");
+    assert.equal(property.getPropertyValue(obj), "getValue_yes", "getValueProp works correctly");
+
+    property = JsonObject.metaData.findProperty(obj.getType(), "serProperty");
+    assert.deepEqual(property.getPropertyValue(obj), {"text": "serProperty_yes"}, "getValueProp works correctly");
+
+    property = JsonObject.metaData.findProperty(obj.getType(), "locProperty");
+    assert.equal(property.getPropertyValue(obj), "loc_yes", "getValueProp works correctly");
 });

@@ -10,6 +10,9 @@ export class JsonObjectProperty {
     public baseClassName: string = null;
     public defaultValue: any = null;
     public readOnly: boolean = false;
+    public visible: boolean = true;
+    public isLocalizable: boolean = false;
+    public serializationProperty: string = null;
     public onGetValue: (obj: any) => any = null;
     public onSetValue: (obj: any, value: any, jsonConv: JsonObject) => any;
 
@@ -17,20 +20,27 @@ export class JsonObjectProperty {
     }
     public get type(): string { return this.typeValue ? this.typeValue : "string"; }
     public set type(value: string) { this.typeValue = value; }
-    public get hasToUseGetValue() { return this.onGetValue; }
+    public get hasToUseGetValue() { return this.onGetValue || this.serializationProperty; }
     public isDefaultValue(value: any): boolean {
         return (this.defaultValue) ? (this.defaultValue == value) : !(value);
     }
     public getValue(obj: any): any {
         if (this.onGetValue) return this.onGetValue(obj);
+        if(this.serializationProperty) return obj[this.serializationProperty].getJson();
         return obj[this.name];
     }
-    public get hasToUseSetValue() { return this.onSetValue; }
+    public getPropertyValue(obj: any): any {
+        if(this.isLocalizable) return obj[this.serializationProperty].text;
+        return this.getValue(obj);
+    }
+    public get hasToUseSetValue() { return this.onSetValue || this.serializationProperty; }
     public setValue(obj: any, value: any, jsonConv: JsonObject) {
         if (this.onSetValue) {
             this.onSetValue(obj, value, jsonConv);
         } else {
-            obj[this.name] = value;
+            if(this.serializationProperty) 
+                obj[this.serializationProperty].setJson(value);
+            else obj[this.name] = value;
         }
     }
     public getObjType(objType: string) {
@@ -91,6 +101,9 @@ export class JsonMetadataClass {
             if (propInfo.default) {
                 prop.defaultValue = propInfo.default;
             }
+            if(propInfo.visible === false) {
+                prop.visible = false;
+            }
             if (propInfo.isRequired) {
                 this.makePropertyRequired(prop.name);
             }
@@ -104,6 +117,16 @@ export class JsonMetadataClass {
             }
             if (propInfo.onSetValue) {
                 prop.onSetValue = propInfo.onSetValue;
+            }
+            if(propInfo.serializationProperty) {
+                prop.serializationProperty = propInfo.serializationProperty;
+                var s: string;
+                if(prop.serializationProperty && prop.serializationProperty.indexOf("loc") == 0) {
+                    prop.isLocalizable = true;    
+                }
+            }
+            if(propInfo.isLocalizable) {
+                prop.isLocalizable = propInfo.isLocalizable;
             }
             if (propInfo.className) {
                 prop.className = propInfo.className;
@@ -396,7 +419,7 @@ export class JsonObject {
             return;
         }
         if (this.isValueArray(value)) {
-            this.valueToArray(value, obj, key, property);
+            this.valueToArray(value, obj, property.name, property);
             return;
         }
         var newObj = this.createNewObj(value, property);

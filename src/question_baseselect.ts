@@ -1,29 +1,40 @@
 ﻿import {JsonObject} from "./jsonobject";
 import {Question} from "./question";
-import {ItemValue, SurveyError} from "./base";
+import {SurveyError} from "./base";
+import {ItemValue} from "./itemvalue";
 import {surveyLocalization} from "./surveyStrings";
 import {CustomError} from "./error";
 import {ChoicesRestfull} from "./choicesRestfull";
+import {LocalizableString} from "./localizablestring";
 
 export class QuestionSelectBase extends Question {
     private visibleChoicesCache: Array<ItemValue> = null;
     private commentValue: string;
+    private otherItemValue: ItemValue = new ItemValue("other", surveyLocalization.getString("otherItemText"));
+    private locOtherTextValue: LocalizableString;
+    private locOtherErrorTextValue: LocalizableString;
     protected cachedValue: any;
-    otherItem: ItemValue = new ItemValue("other", surveyLocalization.getString("otherItemText"));
     private choicesFromUrl: Array<ItemValue> = null;
     private cachedValueForUrlRequestion: any = null;
-    private choicesValues: Array<ItemValue> = new Array<ItemValue>();
+    private choicesValues: Array<ItemValue>;
     public choicesByUrl: ChoicesRestfull;
-    public otherErrorText: string = null;
     public storeOthersAsComment: boolean = true;
     private choicesOrderValue: string = "none";
     choicesChangedCallback: () => void;
     constructor(name: string) {
         super(name);
+        this.choicesValues = ItemValue.createArray(this);
         this.choicesByUrl = this.createRestfull();
+        this.locOtherTextValue = new LocalizableString(this);
+        this.locOtherErrorTextValue = new LocalizableString(this);
         var self = this;
         this.choicesByUrl.getResultCallback = function (items: Array<ItemValue>) { self.onLoadChoicesFromUrl(items) };
     }
+    public get otherItem(): ItemValue {
+        this.otherItemValue.text = this.otherText ? this.otherText : surveyLocalization.getString("otherItemText");
+        return this.otherItemValue;
+    }
+
     public get isOtherSelected(): boolean {
         return this.getStoreOthersAsComment() ? this.getHasOther(this.value) : this.getHasOther(this.cachedValue);
     }
@@ -98,8 +109,16 @@ export class QuestionSelectBase extends Question {
         this.choicesOrderValue = newValue;
         this.onVisibleChoicesChanged();
     }
-    get otherText(): string { return this.otherItem.text; }
-    set otherText(value: string) { this.otherItem.text = value; }
+    public get otherText(): string { return this.locOtherText.text; }
+    public set otherText(value: string) { 
+        this.locOtherText.text = value; 
+        this.updateOtherItem();
+    }
+    public get otherErrorText(): string { return this.locOtherErrorText.text; }
+    public set otherErrorText(value: string) { this.locOtherErrorText.text = value;  }
+    public get locOtherText(): LocalizableString { return this.locOtherTextValue; } 
+    public get locOtherErrorText(): LocalizableString { return this.locOtherErrorTextValue; } 
+    
     get visibleChoices(): Array<ItemValue> {
         if (!this.hasOther && this.choicesOrder == "none") return this.activeChoices;
         if(!this.visibleChoicesCache) {
@@ -121,6 +140,14 @@ export class QuestionSelectBase extends Question {
             text = surveyLocalization.getString("otherRequiredError");
         }
         errors.push(new CustomError(text));
+    }
+    public onLocaleChanged() {
+        super.onLocaleChanged();
+        this.updateOtherItem();
+    }
+    private updateOtherItem() {
+        var item = this.otherItem; // set the correct text
+        this.fireCallback(this.choicesChangedCallback);
     }
     protected getStoreOthersAsComment() { return this.storeOthersAsComment && (this.survey != null ? this.survey.storeOthersAsComment : true); }
     onSurveyLoad() {
@@ -173,6 +200,12 @@ export class QuestionSelectBase extends Question {
         }
         return array;
     }
+    clearUnusedValues() {
+        super.clearUnusedValues();
+        if(!this.isOtherSelected) {
+            this.comment = null;
+        }
+    }
 }
 
 export class QuestionCheckboxBase extends QuestionSelectBase {
@@ -192,7 +225,7 @@ JsonObject.metaData.addClass("selectbase", ["hasComment:boolean", "hasOther:bool
     { name: "choices:itemvalues", onGetValue: function (obj: any) { return ItemValue.getData(obj.choices); }, onSetValue: function (obj: any, value: any) { obj.choices = value; }},
     { name: "choicesOrder", default: "none", choices: ["none", "asc", "desc", "random"] },
     { name: "choicesByUrl:restfull", className: "ChoicesRestfull", onGetValue: function (obj: any) { return obj.choicesByUrl.isEmpty ? null : obj.choicesByUrl; }, onSetValue: function (obj: any, value: any) { obj.choicesByUrl.setData(value); } },
-    { name: "otherText", default: surveyLocalization.getString("otherItemText") }, "otherErrorText",
+    { name: "otherText", serializationProperty: "locOtherText" }, {name: "otherErrorText", serializationProperty: "locOtherErrorText"},
     { name: "storeOthersAsComment:boolean", default: true}], null, "question");
 
 JsonObject.metaData.addClass("checkboxbase", [{ name: "colCount:number", default: 1, choices: [0, 1, 2, 3, 4] }], null, "selectbase");

@@ -1,7 +1,7 @@
 ﻿import * as React from 'react';
 import {SurveyQuestionElementBase} from "./reactquestionelement";
 import {QuestionRadiogroupModel} from "../question_radiogroup";
-import {ItemValue} from "../base";
+import {ItemValue} from "../itemvalue";
 import {SurveyQuestionCommentItem} from "./reactquestioncomment";
 import {ReactQuestionFactory} from "./reactquestionfactory";
 
@@ -57,7 +57,7 @@ export class SurveyQuestionRadiogroup extends SurveyQuestionElementBase {
         var id = isFirst ? this.question.inputId : null;
         return (<div key={key} className={this.css.item} style={divStyle}>
                 <label className={this.css.label}>
-                <input id={id} type="radio" name={this.question.name} checked={isChecked} value={item.value} disabled={this.isDisplayMode} onChange={this.handleOnChange} />
+                <input id={id} type="radio" name={this.question.name + "_" + this.questionBase.id} checked={isChecked} value={item.value} disabled={this.isDisplayMode} onChange={this.handleOnChange} />
                     <span style={this.textStyle}>{item.text}</span>
                     </label>
                 {otherItem}

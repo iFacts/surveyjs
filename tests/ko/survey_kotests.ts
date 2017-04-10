@@ -10,6 +10,8 @@ import {QuestionMultipleText, MultipleTextItem} from "../../src/knockout/koquest
 import {Page} from "../../src/knockout/kopage";
 import {CustomWidgetCollection, QuestionCustomWidget} from "../../src/questionCustomWidgets";
 import {koTemplate} from "../../src/knockout/templateText";
+import {QuestionMatrixDynamic} from "../../src/knockout/koquestion_matrixdynamic";
+import {surveyLocalization} from "../../src/surveyStrings";
 
 export default QUnit.module("koTests");
 
@@ -118,6 +120,36 @@ QUnit.test("Question MatrixDropdown: change matrix value after visibleRows gener
     assert.equal(visibleRows[1].cells[0].question["koValue"](), 2, "value was set");
 });
 
+QUnit.test("Matrixdynamic lost last cell under certain circumstances", function (assert) {
+    var survey = new Survey({ questions: [
+        {
+            type: "matrixdynamic",
+            name: "frameworksRate",
+            title: "Please enter two comments",
+            columns: [
+                {
+                    name: "likeTheBest",
+                    cellType: "comment",
+                    title: "Comment 1"
+                },
+                {
+                    name: "improvements",
+                    cellType: "comment",
+                    title: "Comment 2"
+                }],
+            rowCount: 2
+        }
+    ]});
+    var question: QuestionMatrixDynamic = <any>survey.getQuestionByName("frameworksRate");
+    assert.equal(question.rowCount, 2, "It should be 2 rowCount");
+    assert.equal(question.columns.length, 2, "It should be 2 columns");
+    assert.equal(question["koRows"]().length, 2, "It should be 2 rows");
+    assert.equal(question["koRows"]()[0].cells.length, 2, "It should be 2 cells in 1st row");
+    assert.equal(question["koRows"]()[1].cells.length, 2, "It should be 2 cells in 2nd row");
+    assert.equal(question["koRows"]()[0].cells[0].question.getType(), "comment", "Cell 1 should be comment");
+    assert.equal(question["koRows"]()[0].cells[1].question.getType(), "comment", "Cell 2 should be comment");
+});
+
 QUnit.test("Question MultipleText: koValue in TextItem", function (assert) {
     var mQuestion = new QuestionMultipleText("q1");
     mQuestion.items.push(new MultipleTextItem("i1"));
@@ -140,6 +172,17 @@ QUnit.test("Question MultipleText: koRows", function (assert) {
     mQuestion.colCount = 1;
     assert.equal(mQuestion["koRows"]().length, 2, "two rows now");
     assert.equal(mQuestion["koRows"]()[0].length, 1, "just one item in the first row");
+});
+QUnit.test("koElements", function (assert) {
+    var survey = new Survey();
+    var page = survey.addNewPage("page1");
+    page.addNewQuestion("text", "q1");
+    page.addNewPanel("panel1");
+    assert.equal(page["koRows"]().length, 2, "There are two rows");
+    assert.equal(page.rows[0].questions.length, 1, "One element in the first row");
+    assert.equal(page.rows[1].questions.length, 1, "One element in the second row");
+    assert.equal(page["koRows"]()[0]["koElements"]().length, 1, "One element in the first row, ko");
+    assert.equal(page["koRows"]()[1]["koElements"]().length, 1, "One element in the second row, ko");
 });
 QUnit.test("Set notification on setting survey data", function (assert) {
     var survey = new Survey();
@@ -208,6 +251,18 @@ QUnit.test("add customwidget item", function (assert) {
     assert.ok(koTemplate, "ko template is exists");
     assert.ok(koTemplate.indexOf("survey-widget-first") > -1, "text was added");
     CustomWidgetCollection.Instance.clear();
+});
+
+QUnit.test("Localization, otherItem", function (assert) {
+    var survey = new Survey();
+    var page = survey.addNewPage("page");
+    var q1 = <QuestionCheckbox>page.addNewQuestion("checkbox", "q1");
+    q1.choices = [1, 2];
+    q1.hasOther = true;
+    var defaultText = q1["koVisibleChoices"]()[2].text;
+    assert.equal(q1["koVisibleChoices"]()[2].text, surveyLocalization.getString("otherItemText"), "use default locale");
+    survey.locale = "de";
+    assert.notEqual(q1["koVisibleChoices"]()[2].text, defaultText, "use another locale locale");
 });
 
 

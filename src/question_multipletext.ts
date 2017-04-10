@@ -4,21 +4,28 @@ import {Question} from "./question";
 import {JsonObject} from "./jsonobject";
 import {QuestionFactory} from "./questionfactory";
 import {SurveyError} from "./base";
+import {AnswerRequiredError} from "./error";
+import {ILocalizableOwner, LocalizableString} from "./localizablestring";
 
 export interface IMultipleTextData {
     getMultipleTextValue(name: string): any;
     setMultipleTextValue(name: string, value: any);
+    getIsRequiredText(): string;
+    getLocale(): string;
 }
 
-export class MultipleTextItemModel extends Base implements IValidatorOwner {
+export class MultipleTextItemModel extends Base implements IValidatorOwner, ILocalizableOwner {
     private data: IMultipleTextData;
-    private titleValue: string;
-    public placeHolder: string;
+    private locTitleValue: LocalizableString;
+    private locPlaceHolderValue: LocalizableString;
+    public isRequired: boolean = false;
     validators: Array<SurveyValidator> = new Array<SurveyValidator>();
 
     constructor(public name: any = null, title: string = null) {
         super();
+        this.locTitleValue = new LocalizableString(this);
         this.title = title;
+        this.locPlaceHolderValue = new LocalizableString(this);
     }
     public getType(): string {
         return "multipletextitem";
@@ -26,8 +33,18 @@ export class MultipleTextItemModel extends Base implements IValidatorOwner {
     setData(data: IMultipleTextData) {
         this.data = data;
     }
-    public get title() { return this.titleValue ? this.titleValue : this.name; }
-    public set title(newText: string) { this.titleValue = newText; }
+
+    public get title() { return this.locTitle.text ? this.locTitle.text : this.name; }
+    public set title(value: string) { this.locTitle.text = value; }
+    public get locTitle() { return this.locTitleValue; }
+    public get fullTitle(): string {
+        var res = this.title;
+        if(this.isRequired && this.data) res = this.data.getIsRequiredText() + ' ' + res;
+        return res;
+    }
+    public get placeHolder(): string { return this.locPlaceHolder.text; }
+    public set placeHolder(value: string) { this.locPlaceHolder.text = value; }
+    public get locPlaceHolder(): LocalizableString { return this.locPlaceHolderValue; }
     public get value() {
         return this.data ? this.data.getMultipleTextValue(this.name) : null;
     }
@@ -36,10 +53,12 @@ export class MultipleTextItemModel extends Base implements IValidatorOwner {
             this.data.setMultipleTextValue(this.name, value);
         }
     }
-    onValueChanged(newValue: any) {
+    public onValueChanged(newValue: any) {
     }
     //IValidatorOwner
-    getValidatorTitle(): string { return this.title; }
+    public getValidatorTitle(): string { return this.title; }
+    //ILocalizableOwner
+    public getLocale() { return this.data ? this.data.getLocale() : "";}
 }
 
 export class QuestionMultipleTextModel extends Question implements IMultipleTextData {
@@ -49,13 +68,7 @@ export class QuestionMultipleTextModel extends Question implements IMultipleText
     private itemsValues: Array<MultipleTextItemModel> = new Array<MultipleTextItemModel>();
     constructor(public name: string) {
         super(name);
-        var self = this;
-        this.items.push = function (value) {
-            value.setData(self);
-            var result = Array.prototype.push.call(this, value);
-            self.fireCallback(self.colCountChangedCallback);
-            return result;
-        };
+        this.setItemsOverriddenMethods();
     }
     public getType(): string {
         return "multipletext";
@@ -63,6 +76,7 @@ export class QuestionMultipleTextModel extends Question implements IMultipleText
     public get items(): Array<MultipleTextItemModel> { return this.itemsValues; }
     public set items(value: Array<MultipleTextItemModel>) {
         this.itemsValues = value;
+        this.setItemsOverriddenMethods();
         this.fireCallback(this.colCountChangedCallback);
     }
     public addItem(name: string, title: string = null): MultipleTextItemModel {
@@ -70,8 +84,26 @@ export class QuestionMultipleTextModel extends Question implements IMultipleText
         this.items.push(item);
         return item;
     }
-    //TODO-remove later. Delay removing in case somebody use this function.
-    private AddItem(name: string, title: string = null): MultipleTextItemModel { return this.addItem(name, title); }
+    private setItemsOverriddenMethods() {
+        var self = this;
+        this.itemsValues.push = function (value) {
+            value.setData(self);
+            var result = Array.prototype.push.call(this, value);
+            self.fireCallback(self.colCountChangedCallback);
+            return result;
+        };
+        this.itemsValues.splice = function (start?: number, deleteCount?: number, ...items: MultipleTextItemModel[]): MultipleTextItemModel[] {
+            if(!start) start = 0;
+            if(!deleteCount) deleteCount = 0;
+            var result = Array.prototype.splice.call(self.itemsValues, start, deleteCount, ... items);
+            if(!items) items = [];
+            for(var i = 0; i < items.length; i ++) {
+                items[i].setData(self);
+            }
+            self.fireCallback(self.colCountChangedCallback);
+            return result;
+        };
+    }
     supportGoNextPageAutomatic() {
         for (var i = 0; i < this.items.length; i++) {
             if (!this.items[i].value) return false;
@@ -128,6 +160,24 @@ export class QuestionMultipleTextModel extends Question implements IMultipleText
         }
         return null;
     }
+    public hasErrors(fireCallback: boolean = true): boolean {
+        var res = super.hasErrors(fireCallback);
+        if(!res) res = this.hasErrorInItems(fireCallback);
+        return res;
+    }
+    protected hasErrorInItems(fireCallback: boolean): boolean {
+        for(var i = 0; i < this.items.length; i ++) {
+            var item = this.items[i];
+            if(item.isRequired && !item.value) {
+                this.errors.push(new AnswerRequiredError());
+                if(fireCallback) {
+                    this.fireCallback(this.errorsChangedCallback);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
     //IMultipleTextData
     getMultipleTextValue(name: string) {
         if (!this.value) return null;
@@ -143,10 +193,14 @@ export class QuestionMultipleTextModel extends Question implements IMultipleText
         this.setNewValue(newValue);
         this.isMultipleItemValueChanging = false;
     }
+    getIsRequiredText(): string {
+        return this.survey ? this.survey.requiredText : "";
+    }
 }
 
-JsonObject.metaData.addClass("multipletextitem", ["name", "placeHolder", { name: "title", onGetValue: function (obj: any) { return obj.titleValue; } },
-    { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator" }], function () { return new MultipleTextItemModel(""); });
+JsonObject.metaData.addClass("multipletextitem", ["name", "isRequired:boolean", { name: "placeHolder", serializationProperty: "locPlaceHolder"}, 
+    { name: "title", serializationProperty: "locTitle" }, { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator" }],
+    function () { return new MultipleTextItemModel(""); });
 
 JsonObject.metaData.addClass("multipletext", [{ name: "!items:textitems", className: "multipletextitem" },
         { name: "itemSize:number", default: 25 }, { name: "colCount:number", default: 1, choices: [1, 2, 3, 4] }],

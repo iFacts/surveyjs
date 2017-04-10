@@ -5,15 +5,16 @@ import {surveyLocalization} from "./surveyStrings";
 import {AnswerRequiredError} from "./error";
 import {SurveyValidator, IValidatorOwner, ValidatorRunner} from "./validator";
 import {TextPreProcessor} from "./textPreProcessor";
+import {ILocalizableOwner, LocalizableString} from "./localizablestring";
 
 export class Question extends QuestionBase implements IValidatorOwner {
-    private titleValue: string = null;
+    private locTitleValue: LocalizableString;
+    private locCommentTextValue: LocalizableString;
     private questionValue: any;
     private questionComment: string;
     private isRequiredValue: boolean = false;
     private hasCommentValue: boolean = false;
     private hasOtherValue: boolean = false;
-    private commentTextValue: string = "";
     private textPreProcessor: TextPreProcessor;
     errors: Array<SurveyError> = [];
     validators: Array<SurveyValidator> = new Array<SurveyValidator>();
@@ -24,15 +25,22 @@ export class Question extends QuestionBase implements IValidatorOwner {
 
     constructor(public name: string) {
         super(name);
+        this.locTitleValue = new LocalizableString(this);
+        this.locCommentTextValue = new LocalizableString(this);
     }
     public get hasTitle(): boolean { return true; }
     public get hasInput(): boolean { return true; }
     public get inputId(): string { return this.id + "i"; }
-    public get title(): string { return (this.titleValue) ? this.titleValue : this.name; }
+    public get title(): string { 
+        var res = this.locTitle.text;
+        return res ? res : this.name; 
+    }
     public set title(newValue: string) {
-        this.titleValue = newValue;
+        this.locTitle.text = newValue;
         this.fireCallback(this.titleChangedCallback);
     }
+    public get locTitle(): LocalizableString { return this.locTitleValue; } 
+    public get locCommentText(): LocalizableString { return this.locCommentTextValue; } 
     public get processedTitle() { return this.survey != null ? this.survey.processText(this.title) : this.title; }
     public get fullTitle(): string {
         if (this.survey && this.survey.questionTitleTemplate) {
@@ -86,9 +94,12 @@ export class Question extends QuestionBase implements IValidatorOwner {
         this.hasCommentValue = val;
         if (this.hasComment) this.hasOther = false;
     }
-    public get commentText(): string { return this.commentTextValue ? this.commentTextValue : surveyLocalization.getString("otherItemText"); }
+    public get commentText(): string { 
+        var res = this.locCommentText.text;
+        return res ? res : surveyLocalization.getString("otherItemText"); 
+    }
     public set commentText(value: string) {
-        this.commentTextValue = value;
+        this.locCommentText.text = value;
     }
     public get hasOther(): boolean { return this.hasOtherValue; }
     public set hasOther(val: boolean) {
@@ -217,6 +228,6 @@ export class Question extends QuestionBase implements IValidatorOwner {
     //IValidatorOwner
     getValidatorTitle(): string { return null; }
 }
-JsonObject.metaData.addClass("question", [{ name: "title:text", onGetValue: function (obj: any) { return obj.titleValue; } },
-    { name: "commentText", onGetValue: function (obj: any) { return obj.commentTextValue; } },
+JsonObject.metaData.addClass("question", [{ name: "title:text", serializationProperty: "locTitle" },
+    { name: "commentText", serializationProperty: "locCommentText" },
     "isRequired:boolean", { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator"}], null, "questionbase");

@@ -1,17 +1,25 @@
 ﻿import * as ko from "knockout";
-import {PageModel, QuestionRowModel} from "../page";
+import {PageModel} from "../page";
+import {PanelModelBase, PanelModel, QuestionRowModel} from "../panel";
 import {JsonObject} from "../jsonobject";
 import {QuestionBase} from "../questionbase";
-import {SurveyElement} from "../base";
+import {SurveyElement, IElement} from "../base";
+import {ElementFactory} from "../questionfactory";
 
 export class QuestionRow extends QuestionRowModel {
-    koVisible: any;
-    constructor(public page: PageModel, public question: QuestionBase) {
-        super(page, question);
+    koVisible: any; koElements: any;
+    constructor(public panel: PanelModelBase) {
+        super(panel);
         this.koVisible = ko.observable(this.visible);
+        this.koElements = ko.observableArray();
+    }
+    public addElement(q: IElement) {
+        super.addElement(q);
+        this.koElements(this.elements);
     }
     protected onVisibleChanged() {
         this.koVisible(this.visible);
+        super.onVisibleChanged();
     }
     public koAfterRender(el, con) {
         for (var i = 0; i < el.length; i++) {
@@ -22,23 +30,84 @@ export class QuestionRow extends QuestionRowModel {
     }
 }
 
-export class Page extends PageModel {
-    koNo: any; koQuestionAfterRender: any;
-    constructor(name: string = "") {
-        super(name);
-        this.koNo = ko.observable("");
+export class PanelImplementorBase {
+    koRows: any;
+    constructor(public panel: PanelModelBase) {
         var self = this;
-        this.koQuestionAfterRender = function (elements, con) {
-            if (!self.data) return;
-            var el = SurveyElement.GetFirstNonTextElement(elements);
-            if (el) self.data.afterRenderQuestion(con, el);
-        };
-        this.onCreating();
+        this.koRows = ko.observableArray();
+        this.panel.rowsChangedCallback = function() {self.koRows(self.panel.rows); };
+        this.panel["koQuestionAfterRender"] = function (el, con) { self.koQuestionAfterRender(el, con); };
+        this.panel["koPanelAfterRender"] = function (el, con) { self.koPanelAfterRender(el, con); };
+        this.panel["koRows"] = this.koRows;
     }
-    protected createRow(question: QuestionBase): QuestionRowModel { return new QuestionRow(this, question); }
-    protected onCreating() { }
-    protected onNumChanged(value: number) {
-        this.koNo(value > 0 ? value + ". " : "");
+    protected koQuestionAfterRender(elements, con) {
+        if (!this.panel.data) return;
+        var el = SurveyElement.GetFirstNonTextElement(elements);
+        if (el) this.panel.data.afterRenderQuestion(con, el);
+    }
+    protected koPanelAfterRender(elements, con) {
+        if (!this.panel.data) return;
+        var el = SurveyElement.GetFirstNonTextElement(elements);
+        if (el) this.panel.data.afterRenderPanel(con, el);
     }
 }
+
+export class PageImplementor extends PanelImplementorBase {
+    koNo: any; 
+    constructor(public panel: PanelModelBase) {
+        super(panel);
+        this.koNo = ko.observable("");
+        this.panel["koNo"] = this.koNo;
+    }
+}
+
+export class Panel extends PanelModel {
+    koInnerMargin: any;
+    constructor(name: string = "") {
+        super(name);
+        new PanelImplementorBase(this);
+        this.onCreating();
+        var self = this;
+        this.renderWidthChangedCallback = function() { self.onRenderWidthChanged(); }
+        this.koInnerMargin = ko.observable(this.getIndentSize(this.innerIndent));
+    }
+    protected createRow(): QuestionRowModel { return new QuestionRow(this); }
+    protected onCreating() { }
+    protected onNumChanged(value: number) {
+        this["koNo"](value > 0 ? value + ". " : "");
+    }
+    protected onRenderWidthChanged() {  
+        this.koInnerMargin(this.getIndentSize(this.innerIndent));
+    }
+    private getIndentSize(indent: number): string {
+        if (indent < 1) return "";
+        if (!this.data) return "";
+        var css = this.data["css"];
+        if (!css) return "";
+        return indent * css.question.indent + "px";
+    }
+
+}
+
+
+export class Page extends PageModel {
+    constructor(name: string = "") {
+        super(name);
+        new PageImplementor(this);
+        this.onCreating();
+    }
+    protected createRow(): QuestionRowModel { return new QuestionRow(this); }
+    protected createNewPanel(name: string): PanelModel {
+        return new Panel(name);
+    }
+
+    protected onCreating() { }
+    protected onNumChanged(value: number) {
+        this["koNo"](value > 0 ? value + ". " : "");
+    }
+}
+
+JsonObject.metaData.overrideClassCreatore("panel", function () { return new Panel(); });
 JsonObject.metaData.overrideClassCreatore("page", function () { return new Page(); });
+
+ElementFactory.Instance.registerElement("panel", (name) => { return new Panel(name); });
