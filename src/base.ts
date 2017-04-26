@@ -11,6 +11,7 @@ export interface ISurvey extends ISurveyData {
     currentPage: IPage;
     pageVisibilityChanged(page: IPage, newValue: boolean);
     questionVisibilityChanged(question: IQuestion, newValue: boolean);
+    recommendationsButtonClicked: (question: IQuestion) => void;
     questionAdded(question: IQuestion, index: number, parentPanel: any, rootPanel: any);
     panelAdded(panel: IElement, index: number, parentPanel: any, rootPanel: any);
     questionRemoved(question: IQuestion);
@@ -31,7 +32,7 @@ export interface ISurvey extends ISurveyData {
 export interface IConditionRunner {
     runCondition(values: HashTable<any>);
 }
-export interface IElement  extends IConditionRunner{
+export interface IElement extends IConditionRunner {
     name: string;
     isVisible: boolean;
     setData(newValue: ISurveyData);
@@ -51,6 +52,7 @@ export interface IQuestion extends IElement {
     hasTitle: boolean;
     setVisibleIndex(value: number);
     onSurveyValueChanged(newValue: any);
+    onRecommendationsButtonClicked();
     supportGoNextPageAutomatic(): boolean;
     clearUnusedValues();
 }
@@ -95,7 +97,7 @@ export class SurveyElement {
         var el = document.getElementById(elementId);
         if (!el || !el.scrollIntoView) return false;
         var elemTop = el.getBoundingClientRect().top;
-        if (elemTop < 0)  el.scrollIntoView();
+        if (elemTop < 0) el.scrollIntoView();
         return elemTop < 0;
     }
     public static GetFirstNonTextElement(elements: any) {
@@ -121,7 +123,7 @@ export class Event<T extends Function, Options>  {
     public get isEmpty(): boolean { return this.callbacks == null || this.callbacks.length == 0; }
     public fire(sender: any, options: Options) {
         if (this.callbacks == null) return;
-        for (var i = 0; i < this.callbacks.length; i ++) {
+        for (var i = 0; i < this.callbacks.length; i++) {
             var callResult = this.callbacks[i](sender, options);
 
         }

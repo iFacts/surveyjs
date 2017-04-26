@@ -1,11 +1,11 @@
-﻿import {JsonObject} from './jsonobject';
-import {QuestionBase} from './questionbase';
-import {SurveyError, SurveyElement} from "./base";
-import {surveyLocalization} from "./surveyStrings";
-import {AnswerRequiredError} from "./error";
-import {SurveyValidator, IValidatorOwner, ValidatorRunner} from "./validator";
-import {TextPreProcessor} from "./textPreProcessor";
-import {ILocalizableOwner, LocalizableString} from "./localizablestring";
+﻿import { JsonObject } from './jsonobject';
+import { QuestionBase } from './questionbase';
+import { SurveyError, SurveyElement } from "./base";
+import { surveyLocalization } from "./surveyStrings";
+import { AnswerRequiredError } from "./error";
+import { SurveyValidator, IValidatorOwner, ValidatorRunner } from "./validator";
+import { TextPreProcessor } from "./textPreProcessor";
+import { ILocalizableOwner, LocalizableString } from "./localizablestring";
 
 export class Question extends QuestionBase implements IValidatorOwner {
     private locTitleValue: LocalizableString;
@@ -22,6 +22,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
     commentChangedCallback: () => void;
     errorsChangedCallback: () => void;
     titleChangedCallback: () => void;
+    recommendationsButtonClickCallback: (questionId) => void;
 
     constructor(public name: string) {
         super(name);
@@ -31,16 +32,16 @@ export class Question extends QuestionBase implements IValidatorOwner {
     public get hasTitle(): boolean { return true; }
     public get hasInput(): boolean { return true; }
     public get inputId(): string { return this.id + "i"; }
-    public get title(): string { 
+    public get title(): string {
         var res = this.locTitle.text;
-        return res ? res : this.name; 
+        return res ? res : this.name;
     }
     public set title(newValue: string) {
         this.locTitle.text = newValue;
         this.fireCallback(this.titleChangedCallback);
     }
-    public get locTitle(): LocalizableString { return this.locTitleValue; } 
-    public get locCommentText(): LocalizableString { return this.locCommentTextValue; } 
+    public get locTitle(): LocalizableString { return this.locTitleValue; }
+    public get locCommentText(): LocalizableString { return this.locCommentTextValue; }
     public get processedTitle() { return this.survey != null ? this.survey.processText(this.title) : this.title; }
     public get fullTitle(): string {
         if (this.survey && this.survey.questionTitleTemplate) {
@@ -94,9 +95,9 @@ export class Question extends QuestionBase implements IValidatorOwner {
         this.hasCommentValue = val;
         if (this.hasComment) this.hasOther = false;
     }
-    public get commentText(): string { 
+    public get commentText(): string {
         var res = this.locCommentText.text;
-        return res ? res : surveyLocalization.getString("otherItemText"); 
+        return res ? res : surveyLocalization.getString("otherItemText");
     }
     public set commentText(value: string) {
         this.locCommentText.text = value;
@@ -123,7 +124,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
         return String.fromCharCode(str.charCodeAt(0) + this.visibleIndex);
     }
     protected onSetData() {
-        super.onSetData();
+        super.onSetData();        
         this.onSurveyValueChanged(this.value);
     }
     public get value(): any {
@@ -225,9 +226,16 @@ export class Question extends QuestionBase implements IValidatorOwner {
         this.fireCallback(this.commentChangedCallback);
         this.isValueChangedInSurvey = false;
     }
+
+    onRecommendationsButtonClicked() {
+        if (this.survey.recommendationsButtonClicked) {
+            this.survey.recommendationsButtonClicked(this);
+        }
+    }
+
     //IValidatorOwner
     getValidatorTitle(): string { return null; }
 }
 JsonObject.metaData.addClass("question", [{ name: "title:text", serializationProperty: "locTitle" },
-    { name: "commentText", serializationProperty: "locCommentText" },
-    "isRequired:boolean", { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator"}], null, "questionbase");
+{ name: "commentText", serializationProperty: "locCommentText" },
+    "isRequired:boolean", { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator" }], null, "questionbase");

@@ -20,6 +20,7 @@ export var surveyStrings = {
     pagePrevText: "Previous",
     pageNextText: "Next",
     completeText: "Complete",
+    recommendationsButtonLabelText: "Add recommendation",
     otherItemText: "Other (describe)",
     progressText: "Page {0} of {1}",
     emptySurvey: "There is no visible page or question in the survey.",

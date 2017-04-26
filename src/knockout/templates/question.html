@@ -1,7 +1,16 @@
 ﻿<script type="text/html" id="survey-question">
     <div style="vertical-align:top" data-bind="css: question.survey.css.question.root, style: {display: question.koVisible() ? 'inline-block': 'none', marginLeft: question.koMarginLeft, paddingRight: question.koPaddingRight, width: question.koRenderWidth }, attr: {id: question.id}">
         <!-- ko if: question.hasTitle -->
-        <h5 data-bind="visible: question.survey.questionTitleLocation == 'top', text: question.koTitle(), css: question.survey.css.question.title"></h5>
+        <div class="row">
+            <div class="pull-left">
+                <h5 data-bind="visible: question.survey.questionTitleLocation == 'top', text: question.koTitle(), css: question.survey.css.question.title"></h5>
+            </div>
+            <div class="pull-right">
+                <a class="btn btn-primary btn-xs" data-bind="click: question.onRecommendationsButtonClicked">
+                    <span data-bind="text: question.survey.recommendationsButtonLabelText"></span>
+                </a>
+            </div>
+        </div>
         <!-- /ko -->
         <!-- ko template: { name: 'survey-question-errors', data: question } -->
         <!-- /ko -->

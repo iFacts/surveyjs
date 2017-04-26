@@ -1,8 +1,8 @@
-﻿import {Base, IQuestion, IConditionRunner, ISurveyData, ISurvey, HashTable} from './base';
-import {QuestionCustomWidget} from './questionCustomWidgets';
-import {JsonObject} from './jsonobject';
-import {ConditionRunner} from './conditions';
-import {ILocalizableOwner} from "./localizablestring";
+﻿import { Base, IQuestion, IConditionRunner, ISurveyData, ISurvey, HashTable } from './base';
+import { QuestionCustomWidget } from './questionCustomWidgets';
+import { JsonObject } from './jsonobject';
+import { ConditionRunner } from './conditions';
+import { ILocalizableOwner } from "./localizablestring";
 
 export class QuestionBase extends Base implements IQuestion, IConditionRunner, ILocalizableOwner {
     private static questionCounter = 100;
@@ -28,6 +28,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner, I
     startWithNewLineChangedCallback: () => void;
     visibilityChangedCallback: () => void;
     visibleIndexChangedCallback: () => void;
+    recommendationsButtonClickedCallback: (question: QuestionBase) => void;
 
     constructor(public name: string) {
         super();
@@ -54,10 +55,10 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner, I
     public get hasComment(): boolean { return false; }
     public get id(): string { return this.idValue; }
     public get startWithNewLine(): boolean { return this.startWithNewLineValue; }
-    public set startWithNewLine(value: boolean) { 
-        if(this.startWithNewLine == value) return;
+    public set startWithNewLine(value: boolean) {
+        if (this.startWithNewLine == value) return;
         this.startWithNewLineValue = value;
-        if(this.startWithNewLineChangedCallback) this.startWithNewLineChangedCallback();
+        if (this.startWithNewLineChangedCallback) this.startWithNewLineChangedCallback();
     }
     public get renderWidth(): string { return this.renderWidthValue; }
     public set renderWidth(val: string) {
@@ -74,7 +75,7 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner, I
     public focus(onError: boolean = false) { }
     setData(newValue: ISurveyData) {
         this.data = newValue;
-        if(newValue && newValue["questionAdded"]) {
+        if (newValue && newValue["questionAdded"]) {
             this.surveyValue = <ISurvey>newValue;
         }
         this.onSetData();
@@ -94,6 +95,8 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner, I
     //IQuestion
     public onSurveyValueChanged(newValue: any) {
     }
+    public onRecommendationsButtonClicked() {
+    }
     public onSurveyLoad() {
     }
     public setVisibleIndex(value: number) {
@@ -102,12 +105,12 @@ export class QuestionBase extends Base implements IQuestion, IConditionRunner, I
         this.fireCallback(this.visibleIndexChangedCallback);
     }
     public supportGoNextPageAutomatic() { return false; }
-    public clearUnusedValues() {}
-    public onLocaleChanged() {}
+    public clearUnusedValues() { }
+    public onLocaleChanged() { }
     //ILocalizableOwner
     public getLocale(): string {
-        return this.data ? (<ILocalizableOwner><any>this.data).getLocale() : ""; 
+        return this.data ? (<ILocalizableOwner><any>this.data).getLocale() : "";
     }
 }
 JsonObject.metaData.addClass("questionbase", ["!name", { name: "visible:boolean", default: true }, "visibleIf:expression",
-    { name: "width" }, { name: "startWithNewLine:boolean", default: true}, {name: "indent:number", default: 0, choices: [0, 1, 2, 3]}]);
+    { name: "width" }, { name: "startWithNewLine:boolean", default: true }, { name: "indent:number", default: 0, choices: [0, 1, 2, 3] }]);
