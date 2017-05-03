@@ -9,6 +9,7 @@ import { ILocalizableOwner, LocalizableString } from "./localizablestring";
 
 export class Question extends QuestionBase implements IValidatorOwner {
     private locTitleValue: LocalizableString;
+    private locDescriptionValue: LocalizableString;
     private locCommentTextValue: LocalizableString;
     private questionValue: any;
     private questionComment: string;
@@ -22,11 +23,13 @@ export class Question extends QuestionBase implements IValidatorOwner {
     commentChangedCallback: () => void;
     errorsChangedCallback: () => void;
     titleChangedCallback: () => void;
+    descriptionChangedCallback: () => void;
     recommendationsButtonClickCallback: (questionId) => void;
 
     constructor(public name: string) {
         super(name);
         this.locTitleValue = new LocalizableString(this);
+        this.locDescriptionValue = new LocalizableString(this);
         this.locCommentTextValue = new LocalizableString(this);
     }
     public get hasTitle(): boolean { return true; }
@@ -40,7 +43,16 @@ export class Question extends QuestionBase implements IValidatorOwner {
         this.locTitle.text = newValue;
         this.fireCallback(this.titleChangedCallback);
     }
+    public get description(): string {
+        var res = this.locDescription.text;
+        return res ? res : "";
+    }
+    public set description(newValue: string) {
+        this.locDescription.text = newValue;
+        this.fireCallback(this.descriptionChangedCallback)
+    }
     public get locTitle(): LocalizableString { return this.locTitleValue; }
+    public get locDescription(): LocalizableString { return this.locDescriptionValue; }
     public get locCommentText(): LocalizableString { return this.locCommentTextValue; }
     public get processedTitle() { return this.survey != null ? this.survey.processText(this.title) : this.title; }
     public get fullTitle(): string {
@@ -59,6 +71,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
         if (no) no += ". ";
         return no + requireText + this.processedTitle;
     }
+
     public focus(onError: boolean = false) {
         SurveyElement.ScrollElementToTop(this.id);
         var id = !onError ? this.getFirstInputElementId() : this.getFirstErrorInputElementId();
@@ -124,7 +137,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
         return String.fromCharCode(str.charCodeAt(0) + this.visibleIndex);
     }
     protected onSetData() {
-        super.onSetData();        
+        super.onSetData();
         this.onSurveyValueChanged(this.value);
     }
     public get value(): any {
@@ -236,6 +249,6 @@ export class Question extends QuestionBase implements IValidatorOwner {
     //IValidatorOwner
     getValidatorTitle(): string { return null; }
 }
-JsonObject.metaData.addClass("question", [{ name: "title:text", serializationProperty: "locTitle" },
+JsonObject.metaData.addClass("question", [{ name: "title:text", serializationProperty: "locTitle" },{ name: "description:text", serializationProperty: "locDescription" },
 { name: "commentText", serializationProperty: "locCommentText" },
     "isRequired:boolean", { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator" }], null, "questionbase");
