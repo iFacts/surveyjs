@@ -228,7 +228,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
     protected valueToData(val: any): any { return val; }
     protected onValueChanged() { }
     protected setNewComment(newValue: string) {
-        if (this.data != null) {
+        if (this.data != null && this.data != undefined) {
             this.data.setComment(this.name, newValue);
         } else this.questionComment = newValue;
     }

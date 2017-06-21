@@ -41,7 +41,7 @@ export {QuestionFactory, ElementFactory} from "../../questionfactory";
 export {QuestionFileModel} from "../../question_file";
 export {QuestionHtmlModel} from "../../question_html";
 export {QuestionRadiogroupModel} from "../../question_radiogroup";
-export {QuestionIfactsRadiogroupModel} from "../../question_ifactsradiogroup";
+//export {QuestionIfactsRadiogroupModel} from "../../question_ifactsradiogroup";
 export {QuestionRatingModel} from "../../question_rating";
 export {QuestionTextModel} from "../../question_text";
 export {SurveyModel} from "../../survey";
