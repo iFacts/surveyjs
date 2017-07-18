@@ -17,7 +17,7 @@ export class Question extends QuestionBase implements IValidatorOwner {
     private hasCommentValue: boolean = false;
     private hasOtherValue: boolean = false;
     private textPreProcessor: TextPreProcessor;
-    private recommendationCount: number;
+    private locRecommendationCount: LocalizableString;
 
     errors: Array<SurveyError> = [];
     validators: Array<SurveyValidator> = new Array<SurveyValidator>();
@@ -27,12 +27,14 @@ export class Question extends QuestionBase implements IValidatorOwner {
     titleChangedCallback: () => void;
     descriptionChangedCallback: () => void;
     recommendationsButtonClickCallback: (questionId) => void;
+    recommendationCountChangedCallback: () => void;
 
     constructor(public name: string) {
         super(name);
         this.locTitleValue = new LocalizableString(this);
         this.locDescriptionValue = new LocalizableString(this);
         this.locCommentTextValue = new LocalizableString(this);
+        this.locRecommendationCount = new LocalizableString(this);
     }
     public get hasTitle(): boolean { return true; }
     public get hasInput(): boolean { return true; }
@@ -250,13 +252,18 @@ export class Question extends QuestionBase implements IValidatorOwner {
             this.survey.recommendationsButtonClicked(this);
         }
     }
-    setRecommendationCount(count: number) {
-        this.recommendationCount = count;
+    public get recommendationCount(): string {
+        var res = this.locRecommendationCount;
+        return res ? res.text : "";
+    }
+    public set recommendationCount(newValue: string) {
+        this.locRecommendationCount.text  = newValue;
+        this.fireCallback(this.recommendationCountChangedCallback)
     }
 
     //IValidatorOwner
     getValidatorTitle(): string { return null; }
 }
 JsonObject.metaData.addClass("question", [{ name: "title:text", serializationProperty: "locTitle" },{ name: "description:text", serializationProperty: "locDescription" },
-{ name: "commentText", serializationProperty: "locCommentText" },
+{ name: "commentText", serializationProperty: "locCommentText" }, { name: "recommendationCount:text", serializationProperty: "locRecommendationCount" }, 
     "isRequired:boolean", { name: "validators:validators", baseClassName: "surveyvalidator", classNamePart: "validator" }], null, "questionbase");

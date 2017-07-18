@@ -6,7 +6,7 @@ import {SurveyElement} from "../base";
 export class QuestionImplementor extends QuestionImplementorBase {
     private isUpdating: boolean = false;
     private koDummy: any;
-    koValue: any; koComment: any; koTitle: any; koDescription: any;
+    koValue: any; koComment: any; koTitle: any; koDescription: any; koRecommendationCount: any;
     constructor(public question: Question) {
         super(question);
         var self = this;
@@ -20,6 +20,7 @@ export class QuestionImplementor extends QuestionImplementorBase {
         this.koComment = ko.observable(this.question.comment);
         this.koTitle = ko.pureComputed(function () { self.koDummy(); return self.question.fullTitle; });
         this.koDescription = ko.pureComputed(function () { self.koDummy(); return self.question.description; });
+        this.koRecommendationCount = ko.pureComputed(function () { self.koDummy(); return self.question.recommendationCount; });
         this.koErrors(this.question.errors);
         this.koValue.subscribe(function (newValue) {
             self.updateValue(newValue);
@@ -32,6 +33,7 @@ export class QuestionImplementor extends QuestionImplementorBase {
         this.question["koTitle"] = this.koTitle;
         this.question["koDescription"] = this.koDescription;
         this.question["koQuestionAfterRender"] = function (el, con) { self.koQuestionAfterRender(el, con); };
+        this.question["koRecommendationCount"] = this.koRecommendationCount;
     }
     protected updateQuestion() {
         this.koDummy(this.koDummy() + 1);
