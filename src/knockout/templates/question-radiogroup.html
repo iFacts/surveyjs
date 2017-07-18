@@ -1,7 +1,7 @@
 ﻿<script type="text/html" id="survey-question-radiogroup">
     <form data-bind="css: question.survey.css.radiogroup.root">
         <!-- ko foreach: { data: question.koVisibleChoices, as: 'item', afterRender: question.koAfterRender}  -->
-        <div  data-bind="style:{width: question.koWidth, 'margin-right': question.colCount == 0 ? '5px': '0px'}, css: question.survey.css.radiogroup.item">
+        <div data-bind="css: question.survey.css.radiogroup.item">
             <label data-bind="css: question.survey.css.radiogroup.label">
 				<!-- ko if: question.isValidColor(item.color) -->
 				<span class="survey-answer-color-box" data-bind="style: { 'background-color': item.color }"></span>
