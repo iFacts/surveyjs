@@ -232,6 +232,9 @@ export class Question extends QuestionBase implements IValidatorOwner {
             this.data.setComment(this.name, newValue);
         } else this.questionComment = newValue;
     }
+	public isValidColor(color: string): boolean { 
+		return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i.test(color);
+	}
     //IQuestion
     onSurveyValueChanged(newValue: any) {
         this.isValueChangedInSurvey = true;
