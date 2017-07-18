@@ -4,10 +4,11 @@
         <div class="row">
             <div class="pull-left">
                 <h5 data-bind="visible: question.survey.questionTitleLocation == 'top', text: question.koTitle(), css: question.survey.css.question.title"></h5>
-            </div>            
+            </div>
             <div class="pull-right">
                 <a class="btn btn-primary btn-xs" data-bind="click: question.onRecommendationsButtonClicked">
                     <span data-bind="text: question.survey.recommendationsButtonLabelText"></span>
+                    <span class="badge badge-info" data-bind="text: question.recommendationCount"></span>
                 </a>
             </div>
             <div class="clear question-description">

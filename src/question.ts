@@ -17,6 +17,8 @@ export class Question extends QuestionBase implements IValidatorOwner {
     private hasCommentValue: boolean = false;
     private hasOtherValue: boolean = false;
     private textPreProcessor: TextPreProcessor;
+    private recommendationCount: number;
+
     errors: Array<SurveyError> = [];
     validators: Array<SurveyValidator> = new Array<SurveyValidator>();
     valueChangedCallback: () => void;
@@ -247,6 +249,9 @@ export class Question extends QuestionBase implements IValidatorOwner {
         if (this.survey.recommendationsButtonClicked) {
             this.survey.recommendationsButtonClicked(this);
         }
+    }
+    setRecommendationCount(count: number) {
+        this.recommendationCount = count;
     }
 
     //IValidatorOwner
