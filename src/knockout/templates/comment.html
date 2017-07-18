@@ -1,6 +1,6 @@
 ﻿<script type="text/html" id="survey-comment">
     <!-- ko if: question.survey.isEditMode -->
-    <input data-bind="value: $data.question.koComment, visible: $data.visible, css: question.survey.css.question.comment" />
+    <textarea data-bind="value: $data.question.koComment, visible: $data.visible, css: question.survey.css.question.comment"></textarea>
     <!-- /ko -->
     <!-- ko if: question.survey.isDisplayMode -->
     <div data-bind="text: $data.question.koComment, visible: $data.visible, css: question.survey.css.question.comment"></div>
